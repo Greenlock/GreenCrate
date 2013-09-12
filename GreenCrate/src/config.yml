@@ -1,0 +1,38 @@
+##########################################
+###  GreenCrate Default Configuration  ###
+### ----  ----  ----  ----  ----  ---- ###
+###      (Contains Example Crates)     ###
+##########################################
+
+crates:
+  Example:
+    item-id: 35
+    item-data: 6
+    display-name: '&eShovel Crate'
+    enable-crate-number: true
+    cancel-event: true
+    confiscate: true
+    notify-used: true
+    notify-msg: 'You used <displayname>: <cratename>'
+    contents:
+      i101:
+        ID: 256
+        DATA: 5
+        ENCHANTMENTS:
+          - 'DURABILITY-2'
+        DISPLAYNAME: 'Blargshovell'
+        LORE:
+          - 'It digs.'
+          - 'Yup.'
+      i102:
+        ID: 35
+        DATA: 15
+        AMOUNT: 6
+    gui:
+      enabled: true
+      chest-rows: 1
+      label: 'Crate'
+    mob-drop:
+      enabled: true
+      mob: 'ZOMBIE'
+      chance: 50
