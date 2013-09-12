@@ -1,0 +1,10 @@
+name: GreenCrate
+main: com.dsdev.greencrate.GreenCrate
+version: 0.0.3-Alpha
+load: startup
+commands:
+   crate:
+      description: The main command for GreenCrate.
+      usage: /<command> <subcommand> ...subcommand_args...
+      permission: greencrate.crate
+      permission-message: You don't have permission for this.
