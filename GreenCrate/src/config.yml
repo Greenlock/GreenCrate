@@ -3,6 +3,10 @@
 ### ----  ----  ----  ----  ----  ---- ###
 ###      (Contains Example Crates)     ###
 ##########################################
+mobs:
+  ZOMBIE:
+    Example:
+      chance: 100
 
 crates:
   Example:
@@ -10,6 +14,7 @@ crates:
     item-data: 6
     display-name: '&eShovel Crate'
     enable-crate-number: true
+    enable-lore-name: true
     cancel-event: true
     confiscate: true
     notify-used: true
