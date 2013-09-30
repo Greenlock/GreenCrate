@@ -3,13 +3,27 @@
 ### ----  ----  ----  ----  ----  ---- ###
 ###      (Contains Example Crates)     ###
 ##########################################
+
+global:
+  require-crate-perms: false
+
 mobs:
   ZOMBIE:
-    Example:
-      chance: 100
+    percent-mode: 'Individual'
+    drops:
+      Example1: 100
+  SKELETON:
+    percent-mode: 'XOR'
+    drops:
+      Example1:
+        lower: 0
+        upper: 50
+      Example2:
+        lower: 50
+        upper: 100
 
 crates:
-  Example:
+  Example1:
     item-id: 35
     item-data: 6
     display-name: '&eShovel Crate'
@@ -37,7 +51,31 @@ crates:
       enabled: true
       chest-rows: 1
       label: 'Crate'
-    mob-drop:
-      enabled: true
-      mob: 'ZOMBIE'
-      chance: 50
+  Example2:
+    item-id: 35
+    item-data: 6
+    display-name: '&ePickaxe Crate'
+    enable-crate-number: false
+    enable-lore-name: false
+    cancel-event: true
+    confiscate: true
+    notify-used: true
+    notify-msg: 'You used <displayname>: <cratename>'
+    contents:
+      i101:
+        ID: 257
+        DATA: 25
+        ENCHANTMENTS:
+          - 'DURABILITY-1'
+        DISPLAYNAME: 'Blargenpikk'
+        LORE:
+          - 'It mines.'
+          - 'Yup.'
+      i102:
+        ID: 35
+        DATA: 7
+        AMOUNT: 3
+    gui:
+      enabled: false
+      chest-rows: 0
+      label: 'n/a'
