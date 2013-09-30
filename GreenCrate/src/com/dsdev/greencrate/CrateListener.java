@@ -38,7 +38,26 @@ public class CrateListener implements Listener {
 
     @EventHandler(priority = EventPriority.HIGH)
     public void onEntityDeath(EntityDeathEvent event) {
-        for (String cratename : config.getConfigurationSection("crates").getKeys(false)) {
+        for (String mob : config.getConfigurationSection("mobs").getKeys(false)) {
+            if (EntityType.fromName(mob) == event.getEntityType()) {
+                if (config.getString("mobs." + mob + ".percent-mode").equals("Individual")) {
+                    for (String drop : config.getConfigurationSection("mobs." + mob + ".drops").getKeys(false)) {
+                        if (rand.nextInt(100) < config.getInt("mobs." + mob + ".drops." + drop)) {
+                            event.getEntity().getWorld().dropItemNaturally(event.getEntity().getLocation(), GetCrateItemStack(drop));
+                        }
+                    }
+                } else if (config.getString("mobs." + mob + ".percent-mode").equals("XOR")) {
+                    int chanceint = rand.nextInt(100);
+                    for (String drop : config.getConfigurationSection("mobs." + mob + ".drops").getKeys(false)) {
+                        if (chanceint >= config.getInt("mobs." + mob + ".drops." + drop + ".lower") && chanceint < config.getInt("mobs." + mob + ".drops." + drop + ".upper")) {
+                            event.getEntity().getWorld().dropItemNaturally(event.getEntity().getLocation(), GetCrateItemStack(drop));
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+        /*for (String cratename : config.getConfigurationSection("crates").getKeys(false)) {
             if (config.getBoolean("crates." + cratename + ".mob-drop.enabled")) {
                 if (EntityType.fromName(config.getString("crates." + cratename + ".mob-drop.mob")) == event.getEntityType()) {
                     if (rand.nextInt(100) < config.getInt("crates." + cratename + ".mob-drop.chance")) {
@@ -47,7 +66,7 @@ public class CrateListener implements Listener {
                     }
                 }
             }
-        }
+        }*/
     }
 
     @EventHandler(priority = EventPriority.HIGH)
@@ -55,8 +74,17 @@ public class CrateListener implements Listener {
         for (String cratename : config.getConfigurationSection("crates").getKeys(false)) {
             if (event.getPlayer().getItemInHand().getTypeId() == config.getInt("crates." + cratename + ".item-id")) {
                 if (event.getPlayer().getItemInHand().getDurability() == config.getInt("crates." + cratename + ".item-data")) {
-                    if (event.getPlayer().getItemInHand().getItemMeta().hasLore() && event.getPlayer().getItemInHand().getItemMeta().getLore().get(0).equals(cratename)) {
-                        GiveCrate(cratename, event.getPlayer(), event);
+                    if (config.getBoolean("crates." + cratename + ".enable-lore-name"))
+                    {
+                        if (event.getPlayer().getItemInHand().getItemMeta().hasLore() && event.getPlayer().getItemInHand().getItemMeta().getLore().get(0).equals(cratename)) {
+                            GiveCrate(cratename, event.getPlayer(), event);
+                        }
+                    }
+                    else
+                    {
+                        if (event.getPlayer().getItemInHand().getItemMeta().hasDisplayName() && event.getPlayer().getItemInHand().getItemMeta().getDisplayName().equals(config.getString("crates." + cratename + ".display-name").replace("&", "§"))) {
+                            GiveCrate(cratename, event.getPlayer(), event);
+                        }
                     }
                 }
             }
@@ -65,6 +93,13 @@ public class CrateListener implements Listener {
 
     @SuppressWarnings({"deprecation"})
     public void GiveCrate(String cratename, Player p, PlayerInteractEvent event) {
+        if (config.getBoolean("global.require-crate-perms")) {
+            if (!p.hasPermission("greencrate.use." + cratename)) {
+                p.sendMessage("§2[§aGreenCrate§2]§r You do not have permission to open this!");
+                return;
+            }
+        }
+        
         if (config.getBoolean("crates." + cratename + ".cancel-event")) {
             event.setCancelled(true);
         }
@@ -124,9 +159,8 @@ public class CrateListener implements Listener {
                         //if (!config.getStringList("crates." + cratename + ".contents." + itemkey + ".ENCHANTMENTS").get(0).equals("none"))
                         for (String en : config.getStringList("crates." + cratename + ".contents." + itemkey + ".ENCHANTMENTS")) {
                             try {
-                                item.addEnchantment(Enchantment.getByName(en.split("-")[0]), Integer.parseInt(en.split("-")[1]));
-                            } catch (Exception ex) {
-                            }
+                                item.addUnsafeEnchantment(Enchantment.getByName(en.split("-")[0]), Integer.parseInt(en.split("-")[1]));
+                            } catch (Exception ex) { }
                         }
                         break;
                     case "DISPLAYNAME": {
@@ -154,21 +188,21 @@ public class CrateListener implements Listener {
     }
 
     public ItemStack GetCrateItemStack(String cratename) {
-        int randresult = rand.nextInt(1000);
-
         ItemStack crate = new ItemStack(config.getInt("crates." + cratename + ".item-id"), 1, (short) config.getInt("crates." + cratename + ".item-data"));
         ItemMeta cratemeta = crate.getItemMeta();
 
-        if (!config.getBoolean("crates." + cratename + ".disable-crate-number")) {
-            cratemeta.setDisplayName(config.getString("crates." + cratename + ".display-name").replace("&", "§") + " #" + Integer.toString(randresult));
+        if (config.getBoolean("crates." + cratename + ".enable-crate-number")) {
+            cratemeta.setDisplayName(config.getString("crates." + cratename + ".display-name").replace("&", "§") + " #" + Integer.toString(rand.nextInt(1000)));
         } else {
             cratemeta.setDisplayName(config.getString("crates." + cratename + ".display-name").replace("&", "§"));
         }
 
+        if (config.getBoolean("crates." + cratename + ".enable-lore-name")) {
         ArrayList<String> lore = new ArrayList();
         lore.add(cratename.replace("_", " "));
         cratemeta.setLore(lore);
-
+        }
+        
         crate.setItemMeta(cratemeta);
 
         return crate;
