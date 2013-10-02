@@ -82,6 +82,9 @@ public class GreenCrate extends JavaPlugin {
                     case "open":
                         DoCommandOpen(sender, sendingPlayer, args);
                         break;
+                    case "openfor":
+                        DoCommandOpenFor(sender, sendingPlayer, args);
+                        break;
                     case "openrandom":
                         DoCommandOpenRandom(sender, sendingPlayer, args);
                         break;
@@ -113,6 +116,9 @@ public class GreenCrate extends JavaPlugin {
                         break;
                     case "giverandom":
                         DoConsoleCommandGiveRandom(sender, args);
+                        break;
+                    case "openfor":
+                        DoConsoleCommandOpenFor(sender, args);
                         break;
                     case "openrandomfor":
                         DoConsoleCommandOpenRandomFor(sender, args);
@@ -242,6 +248,37 @@ public class GreenCrate extends JavaPlugin {
         }
     }
 
+    public void DoCommandOpenFor(CommandSender cmdSender, Player sender, String[] args) {
+        
+        if (!(sender.hasPermission("greencrate.crate.openfor"))) {
+            sender.sendMessage("§2[§aGreenCrate§2]§r You do not have permission for this command.");
+        }
+
+        if (args.length < 3) {
+            sender.sendMessage("§2[§aGreenCrate§2]§r Not enough arguments supplied.");
+        }
+
+        List<ItemStack> items = listen.GetCrateItems(args[2]);
+
+        Player target = getServer().getPlayer(args[1]);
+        
+        if (getConfig().getBoolean("crates." + args[2] + ".gui.enabled")) {
+            Inventory inv = target.getServer().createInventory(null, getConfig().getInt("crates." + args[2] + ".gui.chest-rows") * 9, getConfig().getString("crates." + args[2] + ".gui.label"));
+
+            for (int i = 0; i < items.size(); i++) {
+                inv.setItem(i, (ItemStack) items.toArray()[i]);
+            }
+
+            target.openInventory(inv);
+        } else {
+            for (ItemStack i : items) {
+                target.getInventory().addItem(i);
+            }
+
+            target.updateInventory();
+        }
+    }
+    
     public void DoCommandOpenRandom(CommandSender cmdSender, Player sender, String[] args) {
         
         if (!(sender.hasPermission("greencrate.crate.openrandom"))) {
@@ -273,7 +310,7 @@ public class GreenCrate extends JavaPlugin {
     
     public void DoCommandOpenRandomFor(CommandSender cmdSender, Player sender, String[] args) {
         
-        if (!(sender.hasPermission("greencrate.crate.openrandom"))) {
+        if (!(sender.hasPermission("greencrate.crate.openrandomfor"))) {
             sender.sendMessage("§2[§aGreenCrate§2]§r You do not have permission for this command.");
             return;
         }
@@ -330,6 +367,7 @@ public class GreenCrate extends JavaPlugin {
         sender.sendMessage("§r§" + GetPermissionColor(cmdSender, "greencrate.crate.giverandom") + "/crate giverandom <player>§r  --  Gives the specified player a random crate.");
         sender.sendMessage("§r§" + GetPermissionColor(cmdSender, "greencrate.crate.open") + "/crate open <cratename>§r  --  Opens a given crate.");
         sender.sendMessage("§r§" + GetPermissionColor(cmdSender, "greencrate.crate.openrandom") + "/crate openrandom§r  --  Opens a random crate.");
+        sender.sendMessage("§r§" + GetPermissionColor(cmdSender, "greencrate.crate.openrandomfor") + "/crate openrandomfor§r  --  Opens a random crate for the given player.");
         sender.sendMessage("§r§" + GetPermissionColor(cmdSender, "greencrate.crate.reload") + "/crate reload§r  --  Reloads the GreenCrate config.yml file.");
     }
 
@@ -364,6 +402,33 @@ public class GreenCrate extends JavaPlugin {
         target.getInventory().addItem(GetCrateItemStack(cratename));
     }
 
+    public void DoConsoleCommandOpenFor(CommandSender cmdSender, String[] args) {
+        
+        if (args.length < 3) {
+            return;
+        }
+
+        List<ItemStack> items = listen.GetCrateItems(args[2]);
+
+        Player target = getServer().getPlayer(args[1]);
+        
+        if (getConfig().getBoolean("crates." + args[2] + ".gui.enabled")) {
+            Inventory inv = target.getServer().createInventory(null, getConfig().getInt("crates." + args[2] + ".gui.chest-rows") * 9, getConfig().getString("crates." + args[2] + ".gui.label"));
+
+            for (int i = 0; i < items.size(); i++) {
+                inv.setItem(i, (ItemStack) items.toArray()[i]);
+            }
+
+            target.openInventory(inv);
+        } else {
+            for (ItemStack i : items) {
+                target.getInventory().addItem(i);
+            }
+
+            target.updateInventory();
+        }
+    }
+    
     public void DoConsoleCommandOpenRandomFor(CommandSender cmdSender, String[] args) {
         
         if (args.length < 2) {

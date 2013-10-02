@@ -1,0 +1,99 @@
+|###################################|
+|#####  Version 0.0.4 (Alpha)  #####|
+|###################################|
+
+=== Versions ===
+1.6.2, CB-1.6.2-R1.0
+
+=== Added ====
+* Per-crate permissions nodes
+* New mob drop syntax
+* '/crate openrandomfor' command
+* Console command support for 'give', 'giverandom', 'openrandomfor', and 'reload' commands
+* 'enable-lore-name' option for toggling purple crate name lore
+* Support for unsafe enchantment levels
+
+=== Changed ===
+* Switched from building with CraftBukkit jar to Bukkit API jar.
+
+=== Removed ===
+* Support for Minecraft 1.5.2
+
+=== Fixed ===
+* 'enable-crate-number' being non-functional
+* '/crate give' only giving crates to the sender of the command
+
+=== Known Caveats ===
+* Crate-opening logic for crates with 'enable-lore-name' set to false does not work when
+  'enable-crate-number' is set to true for that crate.  Crates with 'enable-crate-number'
+  set to true and 'enable-lore-name' set to false will not open.
+
+
+
+|###################################|
+|#####  Version 0.0.3 (Alpha)  #####|
+|###################################|
+
+=== Versions ===
+CB-1.5.2-R1.0, 1.6.2
+
+=== Added ===
+* '/crate <subcommand>' syntax:
+    * '/crate spawn <name>'
+    * '/crate give <player> <name>'
+    * '/crate random'
+    * '/crate giverandom <player>'
+    * '/crate open <name>'
+    * '/crate openrandom'
+    * '/crate reload'
+
+=== Changed ===
+* Changed 'disable-crate-number' to 'enable-crate-number'.
+
+=== Fixed ===
+* Crate usage no longer removes the entire ItemStack from inventory if multiple crates are stacked.
+
+=== Known Caveats ===
+* [OLD]  Crates cannot be assigned to multiple entities as drops.  This can only be achieved
+  using duplicate crates at this time.
+
+
+
+|###################################|
+|#####  Version 0.0.2 (Alpha)  #####|
+|###################################|
+
+=== Versions ===
+CB-1.5.2-R1.0, 1.6.2
+
+=== Added ===
+* 'disable-create-number' option to remove random crate numbering
+* Customizable GUIs for crates
+* Mob drop functionality
+
+=== Fixed ===
+* Sponge placement disable bug
+
+=== Known Caveats ===
+* Using a crate in a stack of crates will result in the entire stack being removed from
+  the player's inventory.  This is the purpose of the random crate ID; to keep crates from stacking.
+* Crates cannot be assigned to multiple entities as drops.  This can only be achieved using duplicate crates at this time.
+* 'disable-crate-number' does not take effect for the '/givecrate' command.
+
+
+
+|###################################|
+|#####  Version 0.0.1 (Alpha)  #####|
+|###################################|
+
+=== Versions ===
+CB-1.5.2-R1.0, 1.6.2
+
+=== Added ===
+* '/givecrate' and '/crate' commands
+* Customizable Item IDs, Data, Displaynames
+* Custom usage notifications
+* New item syntax
+
+=== Known Caveats ===
+* Disables the placement of Sponge blocks.
