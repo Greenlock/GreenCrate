@@ -12,6 +12,7 @@
 * Console command support for 'give', 'giverandom', 'openrandomfor', and 'reload' commands
 * 'enable-lore-name' option for toggling purple crate name lore
 * Support for unsafe enchantment levels
+* '/crate help' highlights commands that the player has permissions for
 
 === Changed ===
 * Switched from building with CraftBukkit jar to Bukkit API jar.
