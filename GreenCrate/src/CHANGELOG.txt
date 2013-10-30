@@ -1,11 +1,31 @@
 |###################################|
+|#####  Version 0.0.5 (Alpha)  #####|
+|###################################|
+
+=== Versions ===
+CB-1.5.2-R1.0, 1.6.2, 1.6.4
+
+=== Added ===
+* '/crate openfor' command opens a crate for the given player
+* Support for Minecraft v1.5.2
+* 'persistent-items' setting for crate GUIs
+* 'cooldown-*' options for configuring cooldown periods for crates
+
+=== Known Caveats ===
+* [OLD] Crate-opening logic for crates with 'enable-lore-name' set to false does not work when
+  'enable-crate-number' is set to true for that crate.  Crates with 'enable-crate-number'
+  set to true and 'enable-lore-name' set to false will not open.
+
+
+
+|###################################|
 |#####  Version 0.0.4 (Alpha)  #####|
 |###################################|
 
 === Versions ===
 1.6.2, CB-1.6.2-R1.0
 
-=== Added ====
+=== Added ===
 * Per-crate permissions nodes
 * New mob drop syntax
 * '/crate openrandomfor' command

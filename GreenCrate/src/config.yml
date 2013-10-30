@@ -1,7 +1,7 @@
 ##########################################
 ###  GreenCrate Default Configuration  ###
 ### ----  ----  ----  ----  ----  ---- ###
-###     == VERSION 0.0.4 [Alpha] ==    ###
+###     == VERSION 0.0.5 [Alpha] ==    ###
 ### ----  ----  ----  ----  ----  ---- ###
 ###      (Contains Example Crates)     ###
 ##########################################
@@ -25,6 +25,7 @@ mobs:
         upper: 100
 
 crates:
+  
   Example1:
     item-id: 35
     item-data: 6
@@ -35,6 +36,9 @@ crates:
     confiscate: true
     notify-used: true
     notify-msg: 'You used <displayname>: <cratename>'
+    cooldown-enabled: false
+    cooldown-period: 0
+    cooldown-message: 'null'
     contents:
       i101:
         ID: 256
@@ -53,6 +57,8 @@ crates:
       enabled: true
       chest-rows: 1
       label: 'Crate'
+      persistent-items: true
+  
   Example2:
     item-id: 35
     item-data: 6
@@ -63,6 +69,9 @@ crates:
     confiscate: true
     notify-used: true
     notify-msg: 'You used <displayname>: <cratename>'
+    cooldown-enabled: true
+    cooldown-period: 10000
+    cooldown-message: '&cYou are not yet allowed to use this crate again.'
     contents:
       i101:
         ID: 257
@@ -81,3 +90,4 @@ crates:
       enabled: false
       chest-rows: 0
       label: 'n/a'
+      persistent-items: false

@@ -18,6 +18,8 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDeathEvent;
+import org.bukkit.event.inventory.InventoryClickEvent;
+import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
@@ -31,6 +33,7 @@ public class CrateListener implements Listener {
 
     public FileConfiguration config = null;
     public Random rand = new Random();
+    public List<OpenCrateInstance> opencrates = new ArrayList<>();
 
     public CrateListener(FileConfiguration conf, Server s) {
         config = conf;
@@ -100,6 +103,13 @@ public class CrateListener implements Listener {
             }
         }
         
+        if (config.getBoolean("crates." + cratename + ".cooldown-enabled")) {
+            if (!Cooldowns.tryCooldown(p.getName(), "CrateCooldown", config.getInt("crates." + cratename + ".cooldown-period"))) {
+                p.sendMessage(config.getString("crates." + cratename + ".cooldown-message").replace("&", "§"));
+                return;
+            }
+        }
+        
         if (config.getBoolean("crates." + cratename + ".cancel-event")) {
             event.setCancelled(true);
         }
@@ -122,6 +132,8 @@ public class CrateListener implements Listener {
                 inv.setItem(i, (ItemStack) items.toArray()[i]);
             }
 
+            opencrates.add(new OpenCrateInstance(p.getName(), cratename, inv));
+            
             p.openInventory(inv);
         } else {
             for (ItemStack i : items) {
@@ -206,5 +218,46 @@ public class CrateListener implements Listener {
         crate.setItemMeta(cratemeta);
 
         return crate;
+    }
+    
+    @EventHandler(priority = EventPriority.LOW)
+    public void onInventoryClick(InventoryClickEvent event) {
+        for (OpenCrateInstance oci : opencrates) {
+            if (oci.InvHandle.getName().equals(event.getInventory().getName()) && oci.PlayerName.equals(event.getWhoClicked().getName())) {
+                if (config.getBoolean("crates." + oci.CrateName + ".gui.persistent-items")) {
+                    if (event.getRawSlot() < (config.getInt("crates." + oci.CrateName + ".gui.chest-rows")*9)) {
+                        ItemStack stack = null;
+                        if (event.getCurrentItem() != null)
+                            stack = event.getCurrentItem();
+                        else if (event.getCursor() != null)
+                            stack = event.getCursor();
+                        
+                        if (stack != null) {
+                            event.setCurrentItem(stack);
+                            event.setCursor(stack);
+
+                            event.setCancelled(true);
+
+                            Player p = (Player)event.getWhoClicked();
+                            p.sendMessage("Moved item in Inventory");
+
+                            p.updateInventory();
+                        }
+                    }
+                }
+            }
+        }
+    }
+    
+    @EventHandler(priority = EventPriority.HIGH)
+    public void onInventoryClose(InventoryCloseEvent event) {
+        for (OpenCrateInstance oci : opencrates) {
+            if (oci.InvHandle.getName().equals(event.getInventory().getName()) && oci.PlayerName.equals(event.getPlayer().getName())) {
+                Player p = (Player)event.getPlayer();
+                p.sendMessage("Closing Inventory");
+                opencrates.remove(oci);
+                break;
+            }
+        }
     }
 }

@@ -1,6 +1,6 @@
 name: GreenCrate
 main: com.dsdev.greencrate.GreenCrate
-version: 0.0.4-Alpha
+version: 0.0.5-Alpha
 load: startup
 commands:
    crate:
