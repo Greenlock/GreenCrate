@@ -17,6 +17,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
+import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDeathEvent;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryCloseEvent;
@@ -41,25 +42,26 @@ public class CrateListener implements Listener {
 
     @EventHandler(priority = EventPriority.HIGH)
     public void onEntityDeath(EntityDeathEvent event) {
-        for (String mob : config.getConfigurationSection("mobs").getKeys(false)) {
-            if (EntityType.fromName(mob) == event.getEntityType()) {
-                if (config.getString("mobs." + mob + ".percent-mode").equals("Individual")) {
-                    for (String drop : config.getConfigurationSection("mobs." + mob + ".drops").getKeys(false)) {
-                        if (rand.nextInt(100) < config.getInt("mobs." + mob + ".drops." + drop)) {
-                            event.getEntity().getWorld().dropItemNaturally(event.getEntity().getLocation(), GetCrateItemStack(drop));
+        if (event.getEntity().getLastDamageCause() instanceof EntityDamageByEntityEvent)
+            for (String mob : config.getConfigurationSection("mobs").getKeys(false)) {
+                if (EntityType.fromName(mob) == event.getEntityType()) {
+                    if (config.getString("mobs." + mob + ".percent-mode").equals("Individual")) {
+                        for (String drop : config.getConfigurationSection("mobs." + mob + ".drops").getKeys(false)) {
+                            if (rand.nextInt(100) < config.getInt("mobs." + mob + ".drops." + drop)) {
+                                event.getEntity().getWorld().dropItemNaturally(event.getEntity().getLocation(), GetCrateItemStack(drop));
+                            }
                         }
-                    }
-                } else if (config.getString("mobs." + mob + ".percent-mode").equals("XOR")) {
-                    int chanceint = rand.nextInt(100);
-                    for (String drop : config.getConfigurationSection("mobs." + mob + ".drops").getKeys(false)) {
-                        if (chanceint >= config.getInt("mobs." + mob + ".drops." + drop + ".lower") && chanceint < config.getInt("mobs." + mob + ".drops." + drop + ".upper")) {
-                            event.getEntity().getWorld().dropItemNaturally(event.getEntity().getLocation(), GetCrateItemStack(drop));
-                            break;
+                    } else if (config.getString("mobs." + mob + ".percent-mode").equals("XOR")) {
+                        int chanceint = rand.nextInt(100);
+                        for (String drop : config.getConfigurationSection("mobs." + mob + ".drops").getKeys(false)) {
+                            if (chanceint >= config.getInt("mobs." + mob + ".drops." + drop + ".lower") && chanceint < config.getInt("mobs." + mob + ".drops." + drop + ".upper")) {
+                                event.getEntity().getWorld().dropItemNaturally(event.getEntity().getLocation(), GetCrateItemStack(drop));
+                                break;
+                            }
                         }
                     }
                 }
             }
-        }
         /*for (String cratename : config.getConfigurationSection("crates").getKeys(false)) {
             if (config.getBoolean("crates." + cratename + ".mob-drop.enabled")) {
                 if (EntityType.fromName(config.getString("crates." + cratename + ".mob-drop.mob")) == event.getEntityType()) {
@@ -74,10 +76,36 @@ public class CrateListener implements Listener {
 
     @EventHandler(priority = EventPriority.HIGH)
     public void onPlayerUse(PlayerInteractEvent event) {
+        ItemStack iteminhand = event.getPlayer().getItemInHand();
         for (String cratename : config.getConfigurationSection("crates").getKeys(false)) {
-            if (event.getPlayer().getItemInHand().getTypeId() == config.getInt("crates." + cratename + ".item-id")) {
-                if (event.getPlayer().getItemInHand().getDurability() == config.getInt("crates." + cratename + ".item-data")) {
-                    if (config.getBoolean("crates." + cratename + ".enable-lore-name"))
+            if (iteminhand.getTypeId() == config.getInt("crates." + cratename + ".item-id")) {
+                if (iteminhand.getDurability() == config.getInt("crates." + cratename + ".item-data")) {
+                    boolean matches = true;
+                    
+                    if (!config.getString("crates." + cratename + ".display-name").equals("none")){
+                        if (iteminhand.getItemMeta().hasDisplayName() && iteminhand.getItemMeta().getDisplayName().matches("^" + config.getString("crates." + cratename + ".display-name").replace("{random}", ".+") + "$")) { //.replace(".", "\\.").replace("+", "\\+").replace("*", "\\*") + "$")
+                            //nothing
+                        } else {
+                            matches = false;
+                        }
+                    }
+                    
+                    if (!config.getString("crates." + cratename + ".item-lore").equals("none")){
+                        if (iteminhand.getItemMeta().hasLore() && iteminhand.getItemMeta().getLore().get(0).equals(config.getString("crates." + cratename + ".item-lore"))) {
+                            //nothing
+                        } else {
+                            matches = false;
+                        }
+                    }
+                    
+                    if (matches)
+                        GiveCrate(cratename, event.getPlayer(), event);
+                    else
+                        if (config.getBoolean("crates." + cratename + ".cancel-event")) {
+                            event.setCancelled(true);
+                        }
+                    
+                    /*if (config.getBoolean("crates." + cratename + ".enable-lore-name"))
                     {
                         if (event.getPlayer().getItemInHand().getItemMeta().hasLore() && event.getPlayer().getItemInHand().getItemMeta().getLore().get(0).equals(cratename)) {
                             GiveCrate(cratename, event.getPlayer(), event);
@@ -88,7 +116,7 @@ public class CrateListener implements Listener {
                         if (event.getPlayer().getItemInHand().getItemMeta().hasDisplayName() && event.getPlayer().getItemInHand().getItemMeta().getDisplayName().equals(config.getString("crates." + cratename + ".display-name").replace("&", "§"))) {
                             GiveCrate(cratename, event.getPlayer(), event);
                         }
-                    }
+                    }*/
                 }
             }
         }
@@ -96,6 +124,10 @@ public class CrateListener implements Listener {
 
     @SuppressWarnings({"deprecation"})
     public void GiveCrate(String cratename, Player p, PlayerInteractEvent event) {
+        if (config.getBoolean("crates." + cratename + ".cancel-event")) {
+            event.setCancelled(true);
+        }
+        
         if (config.getBoolean("global.require-crate-perms")) {
             if (!p.hasPermission("greencrate.use." + cratename)) {
                 p.sendMessage("§2[§aGreenCrate§2]§r You do not have permission to open this!");
@@ -103,15 +135,22 @@ public class CrateListener implements Listener {
             }
         }
         
-        if (config.getBoolean("crates." + cratename + ".cooldown-enabled")) {
-            if (!Cooldowns.tryCooldown(p.getName(), "CrateCooldown", config.getInt("crates." + cratename + ".cooldown-period"))) {
-                p.sendMessage(config.getString("crates." + cratename + ".cooldown-message").replace("&", "§"));
+        if (config.getBoolean("crates." + cratename + ".bind-to-player")) {
+            boolean canuse = true;
+            for (String lorenode : event.getPlayer().getItemInHand().getItemMeta().getLore())
+                if (lorenode.contains("§r§8Only for ") && !lorenode.equals("§r§8Only for " + event.getPlayer().getName()))
+                    canuse = false;
+            if (!canuse) {
+                p.sendMessage("§2[§aGreenCrate§2]§r This crate is locked!");
                 return;
             }
         }
         
-        if (config.getBoolean("crates." + cratename + ".cancel-event")) {
-            event.setCancelled(true);
+        if (config.getBoolean("crates." + cratename + ".cooldown-enabled")) {
+            if (!Cooldowns.tryCooldown(p.getName(), cratename, config.getInt("crates." + cratename + ".cooldown-period"))) {
+                p.sendMessage(config.getString("crates." + cratename + ".cooldown-message").replace("&", "§"));
+                return;
+            }
         }
 
         if (config.getBoolean("crates." + cratename + ".confiscate")) {
@@ -239,7 +278,6 @@ public class CrateListener implements Listener {
                             event.setCancelled(true);
 
                             Player p = (Player)event.getWhoClicked();
-                            p.sendMessage("Moved item in Inventory");
 
                             p.updateInventory();
                         }
@@ -254,7 +292,6 @@ public class CrateListener implements Listener {
         for (OpenCrateInstance oci : opencrates) {
             if (oci.InvHandle.getName().equals(event.getInventory().getName()) && oci.PlayerName.equals(event.getPlayer().getName())) {
                 Player p = (Player)event.getPlayer();
-                p.sendMessage("Closing Inventory");
                 opencrates.remove(oci);
                 break;
             }

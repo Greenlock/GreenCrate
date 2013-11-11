@@ -1,4 +1,69 @@
 |###################################|
+|#####  Version 0.0.8 (Alpha)  #####|
+|###################################|
+
+=== Versions ===
+CB-1.5.2-R1.0, 1.6.2, 1.6.4
+
+=== Changed ===
+* Mob drops to only drop when the mob is killed by a player
+
+=== Fixed ===
+* PlayerInteractEvent cancellation bug
+
+=== Known Caveats ===
+* [OLD] Crate-opening logic for crates with 'enable-lore-name' set to false does not work when
+  'enable-crate-number' is set to true for that crate.  Crates with 'enable-crate-number'
+  set to true and 'enable-lore-name' set to false will not open.
+
+
+
+|###################################|
+|#####  Version 0.0.7 (Alpha)  #####|
+|###################################|
+
+=== Versions ===
+CB-1.5.2-R1.0, 1.6.2, 1.6.4
+
+=== Added ===
+* 'bind-to-player' option for crates
+
+=== Fixed ===
+* Various problems in '/crate list' logic
+* '/crate reload' not passing config to Listener
+* Unintentionally included debug code
+
+=== Known Caveats ===
+* [OLD] Crate-opening logic for crates with 'enable-lore-name' set to false does not work when
+  'enable-crate-number' is set to true for that crate.  Crates with 'enable-crate-number'
+  set to true and 'enable-lore-name' set to false will not open.
+
+
+
+|###################################|
+|#####  Version 0.0.6 (Alpha)  #####|
+|###################################|
+
+=== Versions ===
+CB-1.5.2-R1.0, 1.6.2, 1.6.4
+
+=== Added ===
+* '/crate list' command for listing crates available to the player
+
+=== Fixed ===
+* Cooldown time lookup bug
+* Subcommand case-sensitivity
+
+=== Known Caveats ===
+* '/crate list' only works with 'require-crate-perms' set to 'true'.
+* permission node for '/crate list' also does not work; The command is available to everyone.
+* [OLD] Crate-opening logic for crates with 'enable-lore-name' set to false does not work when
+  'enable-crate-number' is set to true for that crate.  Crates with 'enable-crate-number'
+  set to true and 'enable-lore-name' set to false will not open.
+
+
+
+|###################################|
 |#####  Version 0.0.5 (Alpha)  #####|
 |###################################|
 
@@ -12,6 +77,7 @@ CB-1.5.2-R1.0, 1.6.2, 1.6.4
 * 'cooldown-*' options for configuring cooldown periods for crates
 
 === Known Caveats ===
+* Cooldowns do not work properly.
 * [OLD] Crate-opening logic for crates with 'enable-lore-name' set to false does not work when
   'enable-crate-number' is set to true for that crate.  Crates with 'enable-crate-number'
   set to true and 'enable-lore-name' set to false will not open.

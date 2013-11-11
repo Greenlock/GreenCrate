@@ -1,7 +1,7 @@
 ##########################################
 ###  GreenCrate Default Configuration  ###
 ### ----  ----  ----  ----  ----  ---- ###
-###     == VERSION 0.0.5 [Alpha] ==    ###
+###     == VERSION 0.0.8 [Alpha] ==    ###
 ### ----  ----  ----  ----  ----  ---- ###
 ###      (Contains Example Crates)     ###
 ##########################################
@@ -29,9 +29,8 @@ crates:
   Example1:
     item-id: 35
     item-data: 6
-    display-name: '&eShovel Crate'
-    enable-crate-number: true
-    enable-lore-name: true
+    display-name: '&eShovel Crate #{random}'
+    item-lore: 'none'
     cancel-event: true
     confiscate: true
     notify-used: true
@@ -39,6 +38,7 @@ crates:
     cooldown-enabled: false
     cooldown-period: 0
     cooldown-message: 'null'
+    bind-to-player: false
     contents:
       i101:
         ID: 256
@@ -63,8 +63,7 @@ crates:
     item-id: 35
     item-data: 6
     display-name: '&ePickaxe Crate'
-    enable-crate-number: false
-    enable-lore-name: false
+    item-lore: 'none'
     cancel-event: true
     confiscate: true
     notify-used: true
@@ -72,6 +71,7 @@ crates:
     cooldown-enabled: true
     cooldown-period: 10000
     cooldown-message: '&cYou are not yet allowed to use this crate again.'
+    bind-to-player: true
     contents:
       i101:
         ID: 257
