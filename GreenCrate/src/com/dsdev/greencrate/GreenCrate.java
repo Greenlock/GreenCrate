@@ -498,7 +498,7 @@ public class GreenCrate extends JavaPlugin {
         } else {
             cratemeta.setDisplayName(config.getString("crates." + cratename + ".display-name").replace("&", "§"));
         }*/
-        cratemeta.setDisplayName(config.getString("crates." + cratename + ".display-name").replace("&", "§").replace("{random}", Integer.toString(rand.nextInt(1000))));
+        cratemeta.setDisplayName(config.getString("crates." + cratename + ".display-name").replace("&", "§").replace("{rand}", Integer.toString(rand.nextInt(1000))));
 
         if (config.getBoolean("crates." + cratename + ".enable-lore-name") || config.getBoolean("crates." + cratename + ".bind-to-player")) {
             ArrayList<String> lore = new ArrayList();

@@ -48,14 +48,14 @@ public class CrateListener implements Listener {
                     if (config.getString("mobs." + mob + ".percent-mode").equals("Individual")) {
                         for (String drop : config.getConfigurationSection("mobs." + mob + ".drops").getKeys(false)) {
                             if (rand.nextInt(100) < config.getInt("mobs." + mob + ".drops." + drop)) {
-                                event.getEntity().getWorld().dropItemNaturally(event.getEntity().getLocation(), GetCrateItemStack(drop));
+                                event.getEntity().getWorld().dropItemNaturally(event.getEntity().getLocation(), GreenCrate.GetCrateItemStack(drop, "null", config));
                             }
                         }
                     } else if (config.getString("mobs." + mob + ".percent-mode").equals("XOR")) {
                         int chanceint = rand.nextInt(100);
                         for (String drop : config.getConfigurationSection("mobs." + mob + ".drops").getKeys(false)) {
                             if (chanceint >= config.getInt("mobs." + mob + ".drops." + drop + ".lower") && chanceint < config.getInt("mobs." + mob + ".drops." + drop + ".upper")) {
-                                event.getEntity().getWorld().dropItemNaturally(event.getEntity().getLocation(), GetCrateItemStack(drop));
+                                event.getEntity().getWorld().dropItemNaturally(event.getEntity().getLocation(), GreenCrate.GetCrateItemStack(drop, "null", config));
                                 break;
                             }
                         }
@@ -82,20 +82,35 @@ public class CrateListener implements Listener {
                 if (iteminhand.getDurability() == config.getInt("crates." + cratename + ".item-data")) {
                     boolean matches = true;
                     
-                    if (!config.getString("crates." + cratename + ".display-name").equals("none")){
-                        if (iteminhand.getItemMeta().hasDisplayName() && iteminhand.getItemMeta().getDisplayName().matches("^" + config.getString("crates." + cratename + ".display-name").replace("{random}", ".+") + "$")) { //.replace(".", "\\.").replace("+", "\\+").replace("*", "\\*") + "$")
-                            //nothing
-                        } else {
-                            matches = false;
+                    if (!config.getString("crates." + cratename + ".display-name").equals("none")) {
+                        event.getPlayer().getServer().broadcastMessage("has displayname");
+                        if (!config.getString("crates." + cratename + ".display-name").contains("{rand}")){
+                            event.getPlayer().getServer().broadcastMessage("no rand in displayname");
+                            if (iteminhand.hasItemMeta() && iteminhand.getItemMeta().hasDisplayName() && iteminhand.getItemMeta().getDisplayName().equals(config.getString("crates." + cratename + ".display-name").replace("&", "§"))) { //.replace(".", "\\.").replace("+", "\\+").replace("*", "\\*") + "$")
+                                //nothing
+                                event.getPlayer().getServer().broadcastMessage("displayname matches");
+                            } else {
+                                matches = false;
+                            }
+                        }
+                        else
+                        {
+                            event.getPlayer().getServer().broadcastMessage("no displayname");
                         }
                     }
                     
                     if (!config.getString("crates." + cratename + ".item-lore").equals("none")){
-                        if (iteminhand.getItemMeta().hasLore() && iteminhand.getItemMeta().getLore().get(0).equals(config.getString("crates." + cratename + ".item-lore"))) {
+                        event.getPlayer().getServer().broadcastMessage("has lore");
+                        if (iteminhand.getItemMeta().hasLore() && iteminhand.getItemMeta().getLore().get(0).equals(config.getString("crates." + cratename + ".item-lore").replace("&", "§"))) {
                             //nothing
+                            event.getPlayer().getServer().broadcastMessage("lore matches");
                         } else {
                             matches = false;
                         }
+                    }
+                    else
+                    {
+                        event.getPlayer().getServer().broadcastMessage("no lore");
                     }
                     
                     if (matches)
@@ -238,7 +253,7 @@ public class CrateListener implements Listener {
         return ret;
     }
 
-    public ItemStack GetCrateItemStack(String cratename) {
+    public ItemStack GetCrateItemStackOld(String cratename) {
         ItemStack crate = new ItemStack(config.getInt("crates." + cratename + ".item-id"), 1, (short) config.getInt("crates." + cratename + ".item-data"));
         ItemMeta cratemeta = crate.getItemMeta();
 

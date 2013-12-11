@@ -29,7 +29,7 @@ crates:
   Example1:
     item-id: 35
     item-data: 6
-    display-name: '&eShovel Crate #{random}'
+    display-name: '&eShovel Crate #{rand}'
     item-lore: 'none'
     cancel-event: true
     confiscate: true
