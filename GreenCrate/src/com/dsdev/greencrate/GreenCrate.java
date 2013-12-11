@@ -164,15 +164,20 @@ public class GreenCrate extends JavaPlugin {
 
     public void DoCommandGive(CommandSender cmdSender, Player sender, String[] args) {
         
-        Player target = getServer().getPlayer(args[1]);
-
         if (!(sender.hasPermission("greencrate.crate.give"))) {
             sender.sendMessage("§2[§aGreenCrate§2]§r You do not have permission for this command.");
             return;
         }
-
+        
         if (args.length < 3) {
             sender.sendMessage("§2[§aGreenCrate§2]§r Not enough arguments supplied.");
+            return;
+        }
+        
+        Player target = getServer().getPlayer(args[1]);
+        
+        if (target == null) {
+            sender.sendMessage("§2[§aGreenCrate§2]§r The specified player is not online!");
             return;
         }
 
@@ -203,18 +208,23 @@ public class GreenCrate extends JavaPlugin {
 
     public void DoCommandGiveRandom(CommandSender cmdSender, Player sender, String[] args) {
         
-        Player target = getServer().getPlayer(args[1]);
-
         if (!(sender.hasPermission("greencrate.crate.giverandom"))) {
             sender.sendMessage("§2[§aGreenCrate§2]§r You do not have permission for this command.");
             return;
         }
-
+        
         if (args.length < 2) {
             sender.sendMessage("§2[§aGreenCrate§2]§r Not enough arguments supplied.");
             return;
         }
+        
+        Player target = getServer().getPlayer(args[1]);
 
+        if (target == null) {
+            sender.sendMessage("§2[§aGreenCrate§2]§r The specified player is not online!");
+            return;
+        }
+        
         int crateindex = rand.nextInt(getConfig().getConfigurationSection("crates").getKeys(false).size());
         String cratename = (String) getConfig().getConfigurationSection("crates").getKeys(false).toArray()[crateindex];
 
@@ -265,6 +275,11 @@ public class GreenCrate extends JavaPlugin {
         List<ItemStack> items = listen.GetCrateItems(args[2]);
 
         Player target = getServer().getPlayer(args[1]);
+        
+        if (target == null) {
+            sender.sendMessage("§2[§aGreenCrate§2]§r The specified player is not online!");
+            return;
+        }
         
         if (getConfig().getBoolean("crates." + args[2] + ".gui.enabled")) {
             Inventory inv = target.getServer().createInventory(null, getConfig().getInt("crates." + args[2] + ".gui.chest-rows") * 9, getConfig().getString("crates." + args[2] + ".gui.label"));
@@ -330,6 +345,11 @@ public class GreenCrate extends JavaPlugin {
         List<ItemStack> items = listen.GetCrateItems(cratename);
 
         Player target = getServer().getPlayer(args[1]);
+        
+        if (target == null) {
+            sender.sendMessage("§2[§aGreenCrate§2]§r The specified player is not online!");
+            return;
+        }
         
         if (getConfig().getBoolean("crates." + cratename + ".gui.enabled")) {
             Inventory inv = target.getServer().createInventory(null, getConfig().getInt("crates." + cratename + ".gui.chest-rows") * 9, getConfig().getString("crates." + cratename + ".gui.label"));
@@ -398,6 +418,11 @@ public class GreenCrate extends JavaPlugin {
         
         Player target = getServer().getPlayer(args[1]);
 
+        if (target == null) {
+            getLogger().warning("The specified player is not online!");
+            return;
+        }
+        
         if (args.length < 3) {
             return;
         }
@@ -413,6 +438,11 @@ public class GreenCrate extends JavaPlugin {
         
         Player target = getServer().getPlayer(args[1]);
 
+        if (target == null) {
+            getLogger().warning("The specified player is not online!");
+            return;
+        }
+        
         if (args.length < 2) {
             return;
         }
@@ -432,6 +462,11 @@ public class GreenCrate extends JavaPlugin {
         List<ItemStack> items = listen.GetCrateItems(args[2]);
 
         Player target = getServer().getPlayer(args[1]);
+        
+        if (target == null) {
+            getLogger().warning("The specified player is not online!");
+            return;
+        }
         
         if (getConfig().getBoolean("crates." + args[2] + ".gui.enabled")) {
             Inventory inv = target.getServer().createInventory(null, getConfig().getInt("crates." + args[2] + ".gui.chest-rows") * 9, getConfig().getString("crates." + args[2] + ".gui.label"));
@@ -462,6 +497,11 @@ public class GreenCrate extends JavaPlugin {
         List<ItemStack> items = listen.GetCrateItems(cratename);
 
         Player target = getServer().getPlayer(args[1]);
+        
+        if (target == null) {
+            getLogger().warning("The specified player is not online!");
+            return;
+        }
         
         if (getConfig().getBoolean("crates." + cratename + ".gui.enabled")) {
             Inventory inv = target.getServer().createInventory(null, getConfig().getInt("crates." + cratename + ".gui.chest-rows") * 9, getConfig().getString("crates." + cratename + ".gui.label"));
@@ -500,14 +540,15 @@ public class GreenCrate extends JavaPlugin {
         }*/
         cratemeta.setDisplayName(config.getString("crates." + cratename + ".display-name").replace("&", "§").replace("{rand}", Integer.toString(rand.nextInt(1000))));
 
-        if (config.getBoolean("crates." + cratename + ".enable-lore-name") || config.getBoolean("crates." + cratename + ".bind-to-player")) {
-            ArrayList<String> lore = new ArrayList();
-            if (config.getBoolean("crates." + cratename + ".enable-lore-name"))
+        ArrayList<String> lore = new ArrayList();
+        if (config.getBoolean("crates." + cratename + ".enable-lore-name"))
                 lore.add(cratename.replace("_", " "));
-            if (config.getBoolean("crates." + cratename + ".bind-to-player"))
+        if (!(config.getString("crates." + cratename + ".item-lore") == "none"))
+                lore.add(config.getString("crates." + cratename + ".item-lore"));
+        if (config.getBoolean("crates." + cratename + ".bind-to-player"))
                 lore.add("§r§8Only for " + playername);
+        if (!lore.isEmpty())
             cratemeta.setLore(lore);
-        }
         
         crate.setItemMeta(cratemeta);
 
