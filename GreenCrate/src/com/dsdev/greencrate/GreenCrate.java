@@ -11,6 +11,7 @@ import java.util.Random;
 
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
+import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.event.HandlerList;
 import org.bukkit.inventory.Inventory;
@@ -47,7 +48,7 @@ public class GreenCrate extends JavaPlugin {
     
     
     
-    private Random rand = new Random();
+    public static Random rand = new Random();
     private CrateListener listen;
 
     
@@ -66,7 +67,7 @@ public class GreenCrate extends JavaPlugin {
                     return true;
                 }
 
-                switch (args[0]) {
+                switch (args[0].toLowerCase()) {
                     case "spawn":
                         DoCommandSpawn(sender, sendingPlayer, args);
                         break;
@@ -82,6 +83,9 @@ public class GreenCrate extends JavaPlugin {
                     case "open":
                         DoCommandOpen(sender, sendingPlayer, args);
                         break;
+                    case "openfor":
+                        DoCommandOpenFor(sender, sendingPlayer, args);
+                        break;
                     case "openrandom":
                         DoCommandOpenRandom(sender, sendingPlayer, args);
                         break;
@@ -96,6 +100,9 @@ public class GreenCrate extends JavaPlugin {
                         break;
                     case "?":
                         DoCommandHelp(sender, sendingPlayer);
+                        break;
+                    case "list":
+                        DoCommandList(sender, sendingPlayer);
                         break;
                     default:
                         DoCommandHelp(sender, sendingPlayer);
@@ -113,6 +120,9 @@ public class GreenCrate extends JavaPlugin {
                         break;
                     case "giverandom":
                         DoConsoleCommandGiveRandom(sender, args);
+                        break;
+                    case "openfor":
+                        DoConsoleCommandOpenFor(sender, args);
                         break;
                     case "openrandomfor":
                         DoConsoleCommandOpenRandomFor(sender, args);
@@ -147,7 +157,7 @@ public class GreenCrate extends JavaPlugin {
             return;
         }
 
-        sender.getInventory().addItem(GetCrateItemStack(args[1]));
+        sender.getInventory().addItem(GetCrateItemStack(args[1], sender.getName(), getConfig()));
         
         sender.sendMessage("§2[§aGreenCrate§2]§r Spawned in crate \"" + args[1].replace("_", " ") + "\"");
     }
@@ -171,7 +181,7 @@ public class GreenCrate extends JavaPlugin {
             return;
         }
 
-        target.getInventory().addItem(GetCrateItemStack(args[2]));
+        target.getInventory().addItem(GetCrateItemStack(args[2], target.getName(), getConfig()));
         
         sender.sendMessage("§2[§aGreenCrate§2]§r Gave crate \"" + args[2].replace("_", " ") + "\" to player " + target.getName());
     }
@@ -186,7 +196,7 @@ public class GreenCrate extends JavaPlugin {
         int crateindex = rand.nextInt(getConfig().getConfigurationSection("crates").getKeys(false).size());
         String cratename = (String) getConfig().getConfigurationSection("crates").getKeys(false).toArray()[crateindex];
 
-        sender.getInventory().addItem(GetCrateItemStack(cratename));
+        sender.getInventory().addItem(GetCrateItemStack(cratename, sender.getName(), getConfig()));
         
         sender.sendMessage("§2[§aGreenCrate§2]§r Spawned in random crate \"" + cratename.replace("_", " ") + "\"");
     }
@@ -208,7 +218,7 @@ public class GreenCrate extends JavaPlugin {
         int crateindex = rand.nextInt(getConfig().getConfigurationSection("crates").getKeys(false).size());
         String cratename = (String) getConfig().getConfigurationSection("crates").getKeys(false).toArray()[crateindex];
 
-        target.getInventory().addItem(GetCrateItemStack(cratename));
+        target.getInventory().addItem(GetCrateItemStack(cratename, target.getName(), getConfig()));
         
         sender.sendMessage("§2[§aGreenCrate§2]§r Gave random crate \"" + cratename.replace("_", " ") + "\" to player " + target.getName());
     }
@@ -242,6 +252,37 @@ public class GreenCrate extends JavaPlugin {
         }
     }
 
+    public void DoCommandOpenFor(CommandSender cmdSender, Player sender, String[] args) {
+        
+        if (!(sender.hasPermission("greencrate.crate.openfor"))) {
+            sender.sendMessage("§2[§aGreenCrate§2]§r You do not have permission for this command.");
+        }
+
+        if (args.length < 3) {
+            sender.sendMessage("§2[§aGreenCrate§2]§r Not enough arguments supplied.");
+        }
+
+        List<ItemStack> items = listen.GetCrateItems(args[2]);
+
+        Player target = getServer().getPlayer(args[1]);
+        
+        if (getConfig().getBoolean("crates." + args[2] + ".gui.enabled")) {
+            Inventory inv = target.getServer().createInventory(null, getConfig().getInt("crates." + args[2] + ".gui.chest-rows") * 9, getConfig().getString("crates." + args[2] + ".gui.label"));
+
+            for (int i = 0; i < items.size(); i++) {
+                inv.setItem(i, (ItemStack) items.toArray()[i]);
+            }
+
+            target.openInventory(inv);
+        } else {
+            for (ItemStack i : items) {
+                target.getInventory().addItem(i);
+            }
+
+            target.updateInventory();
+        }
+    }
+    
     public void DoCommandOpenRandom(CommandSender cmdSender, Player sender, String[] args) {
         
         if (!(sender.hasPermission("greencrate.crate.openrandom"))) {
@@ -273,7 +314,7 @@ public class GreenCrate extends JavaPlugin {
     
     public void DoCommandOpenRandomFor(CommandSender cmdSender, Player sender, String[] args) {
         
-        if (!(sender.hasPermission("greencrate.crate.openrandom"))) {
+        if (!(sender.hasPermission("greencrate.crate.openrandomfor"))) {
             sender.sendMessage("§2[§aGreenCrate§2]§r You do not have permission for this command.");
             return;
         }
@@ -315,6 +356,7 @@ public class GreenCrate extends JavaPlugin {
 
         reloadConfig();
         HandlerList.unregisterAll(this);
+        listen = new CrateListener(getConfig(), getServer());
         getServer().getPluginManager().registerEvents(listen, this);
 
         sender.sendMessage("§2[§aGreenCrate§2]§r Config reloaded!");
@@ -330,7 +372,24 @@ public class GreenCrate extends JavaPlugin {
         sender.sendMessage("§r§" + GetPermissionColor(cmdSender, "greencrate.crate.giverandom") + "/crate giverandom <player>§r  --  Gives the specified player a random crate.");
         sender.sendMessage("§r§" + GetPermissionColor(cmdSender, "greencrate.crate.open") + "/crate open <cratename>§r  --  Opens a given crate.");
         sender.sendMessage("§r§" + GetPermissionColor(cmdSender, "greencrate.crate.openrandom") + "/crate openrandom§r  --  Opens a random crate.");
+        sender.sendMessage("§r§" + GetPermissionColor(cmdSender, "greencrate.crate.openrandomfor") + "/crate openrandomfor§r  --  Opens a random crate for the given player.");
         sender.sendMessage("§r§" + GetPermissionColor(cmdSender, "greencrate.crate.reload") + "/crate reload§r  --  Reloads the GreenCrate config.yml file.");
+    }
+    
+    public void DoCommandList(CommandSender cmdSender, Player sender) {
+        if (!(sender.hasPermission("greencrate.crate.list"))) {
+            sender.sendMessage("§2[§aGreenCrate§2]§r You do not have permission for this command.");
+        }
+        
+        sender.sendMessage("§2[§aGreenCrate§2]§r Available crates:");
+        if (getConfig().getBoolean("global.require-crate-perms")) {
+            for (String cratename : getConfig().getConfigurationSection("crates").getKeys(false))
+                if (sender.hasPermission("greencrate.use." + cratename))
+                    sender.sendMessage("§r§6- " + cratename);
+        } else {
+            for (String cratename : getConfig().getConfigurationSection("crates").getKeys(false))
+                sender.sendMessage("§r§6- " + cratename);
+        }
     }
 
     
@@ -347,7 +406,7 @@ public class GreenCrate extends JavaPlugin {
             return;
         }
 
-        target.getInventory().addItem(GetCrateItemStack(args[2]));
+        target.getInventory().addItem(GetCrateItemStack(args[2], target.getName(), getConfig()));
     }
 
     public void DoConsoleCommandGiveRandom(CommandSender cmdSender, String[] args) {
@@ -361,9 +420,36 @@ public class GreenCrate extends JavaPlugin {
         int crateindex = rand.nextInt(getConfig().getConfigurationSection("crates").getKeys(false).size());
         String cratename = (String) getConfig().getConfigurationSection("crates").getKeys(false).toArray()[crateindex];
 
-        target.getInventory().addItem(GetCrateItemStack(cratename));
+        target.getInventory().addItem(GetCrateItemStack(cratename, target.getName(), getConfig()));
     }
 
+    public void DoConsoleCommandOpenFor(CommandSender cmdSender, String[] args) {
+        
+        if (args.length < 3) {
+            return;
+        }
+
+        List<ItemStack> items = listen.GetCrateItems(args[2]);
+
+        Player target = getServer().getPlayer(args[1]);
+        
+        if (getConfig().getBoolean("crates." + args[2] + ".gui.enabled")) {
+            Inventory inv = target.getServer().createInventory(null, getConfig().getInt("crates." + args[2] + ".gui.chest-rows") * 9, getConfig().getString("crates." + args[2] + ".gui.label"));
+
+            for (int i = 0; i < items.size(); i++) {
+                inv.setItem(i, (ItemStack) items.toArray()[i]);
+            }
+
+            target.openInventory(inv);
+        } else {
+            for (ItemStack i : items) {
+                target.getInventory().addItem(i);
+            }
+
+            target.updateInventory();
+        }
+    }
+    
     public void DoConsoleCommandOpenRandomFor(CommandSender cmdSender, String[] args) {
         
         if (args.length < 2) {
@@ -397,25 +483,30 @@ public class GreenCrate extends JavaPlugin {
     public void DoConsoleCommandReload(CommandSender cmdSender, String[] args) {
         reloadConfig();
         HandlerList.unregisterAll(this);
+        listen = new CrateListener(getConfig(), getServer());
         getServer().getPluginManager().registerEvents(listen, this);
     }
 
     
     
-    public ItemStack GetCrateItemStack(String cratename) {
-        ItemStack crate = new ItemStack(getConfig().getInt("crates." + cratename + ".item-id"), 1, (short) getConfig().getInt("crates." + cratename + ".item-data"));
+    public static ItemStack GetCrateItemStack(String cratename, String playername, FileConfiguration config) {
+        ItemStack crate = new ItemStack(config.getInt("crates." + cratename + ".item-id"), 1, (short)config.getInt("crates." + cratename + ".item-data"));
         ItemMeta cratemeta = crate.getItemMeta();
 
-        if (getConfig().getBoolean("crates." + cratename + ".enable-crate-number")) {
-            cratemeta.setDisplayName(getConfig().getString("crates." + cratename + ".display-name").replace("&", "§") + " #" + Integer.toString(rand.nextInt(1000)));
+        /*if (config.getBoolean("crates." + cratename + ".enable-crate-number")) {
+            cratemeta.setDisplayName(config.getString("crates." + cratename + ".display-name").replace("&", "§") + " #" + Integer.toString(rand.nextInt(1000)));
         } else {
-            cratemeta.setDisplayName(getConfig().getString("crates." + cratename + ".display-name").replace("&", "§"));
-        }
+            cratemeta.setDisplayName(config.getString("crates." + cratename + ".display-name").replace("&", "§"));
+        }*/
+        cratemeta.setDisplayName(config.getString("crates." + cratename + ".display-name").replace("&", "§").replace("{rand}", Integer.toString(rand.nextInt(1000))));
 
-        if (getConfig().getBoolean("crates." + cratename + ".enable-lore-name")) {
-        ArrayList<String> lore = new ArrayList();
-        lore.add(cratename.replace("_", " "));
-        cratemeta.setLore(lore);
+        if (config.getBoolean("crates." + cratename + ".enable-lore-name") || config.getBoolean("crates." + cratename + ".bind-to-player")) {
+            ArrayList<String> lore = new ArrayList();
+            if (config.getBoolean("crates." + cratename + ".enable-lore-name"))
+                lore.add(cratename.replace("_", " "));
+            if (config.getBoolean("crates." + cratename + ".bind-to-player"))
+                lore.add("§r§8Only for " + playername);
+            cratemeta.setLore(lore);
         }
         
         crate.setItemMeta(cratemeta);
@@ -423,10 +514,6 @@ public class GreenCrate extends JavaPlugin {
         return crate;
     }
 
-    public boolean HasCrateRequirements(String permnode, boolean isPlayer) {
-        return true;
-    }
-    
     public String GetPermissionColor(CommandSender sender, String perm) {
         if (sender.hasPermission(perm))
             return "6";

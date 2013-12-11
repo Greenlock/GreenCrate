@@ -17,7 +17,10 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
+import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDeathEvent;
+import org.bukkit.event.inventory.InventoryClickEvent;
+import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
@@ -31,6 +34,7 @@ public class CrateListener implements Listener {
 
     public FileConfiguration config = null;
     public Random rand = new Random();
+    public List<OpenCrateInstance> opencrates = new ArrayList<>();
 
     public CrateListener(FileConfiguration conf, Server s) {
         config = conf;
@@ -38,25 +42,26 @@ public class CrateListener implements Listener {
 
     @EventHandler(priority = EventPriority.HIGH)
     public void onEntityDeath(EntityDeathEvent event) {
-        for (String mob : config.getConfigurationSection("mobs").getKeys(false)) {
-            if (EntityType.fromName(mob) == event.getEntityType()) {
-                if (config.getString("mobs." + mob + ".percent-mode").equals("Individual")) {
-                    for (String drop : config.getConfigurationSection("mobs." + mob + ".drops").getKeys(false)) {
-                        if (rand.nextInt(100) < config.getInt("mobs." + mob + ".drops." + drop)) {
-                            event.getEntity().getWorld().dropItemNaturally(event.getEntity().getLocation(), GetCrateItemStack(drop));
+        if (event.getEntity().getLastDamageCause() instanceof EntityDamageByEntityEvent)
+            for (String mob : config.getConfigurationSection("mobs").getKeys(false)) {
+                if (EntityType.fromName(mob) == event.getEntityType()) {
+                    if (config.getString("mobs." + mob + ".percent-mode").equals("Individual")) {
+                        for (String drop : config.getConfigurationSection("mobs." + mob + ".drops").getKeys(false)) {
+                            if (rand.nextInt(100) < config.getInt("mobs." + mob + ".drops." + drop)) {
+                                event.getEntity().getWorld().dropItemNaturally(event.getEntity().getLocation(), GreenCrate.GetCrateItemStack(drop, "null", config));
+                            }
                         }
-                    }
-                } else if (config.getString("mobs." + mob + ".percent-mode").equals("XOR")) {
-                    int chanceint = rand.nextInt(100);
-                    for (String drop : config.getConfigurationSection("mobs." + mob + ".drops").getKeys(false)) {
-                        if (chanceint >= config.getInt("mobs." + mob + ".drops." + drop + ".lower") && chanceint < config.getInt("mobs." + mob + ".drops." + drop + ".upper")) {
-                            event.getEntity().getWorld().dropItemNaturally(event.getEntity().getLocation(), GetCrateItemStack(drop));
-                            break;
+                    } else if (config.getString("mobs." + mob + ".percent-mode").equals("XOR")) {
+                        int chanceint = rand.nextInt(100);
+                        for (String drop : config.getConfigurationSection("mobs." + mob + ".drops").getKeys(false)) {
+                            if (chanceint >= config.getInt("mobs." + mob + ".drops." + drop + ".lower") && chanceint < config.getInt("mobs." + mob + ".drops." + drop + ".upper")) {
+                                event.getEntity().getWorld().dropItemNaturally(event.getEntity().getLocation(), GreenCrate.GetCrateItemStack(drop, "null", config));
+                                break;
+                            }
                         }
                     }
                 }
             }
-        }
         /*for (String cratename : config.getConfigurationSection("crates").getKeys(false)) {
             if (config.getBoolean("crates." + cratename + ".mob-drop.enabled")) {
                 if (EntityType.fromName(config.getString("crates." + cratename + ".mob-drop.mob")) == event.getEntityType()) {
@@ -71,10 +76,51 @@ public class CrateListener implements Listener {
 
     @EventHandler(priority = EventPriority.HIGH)
     public void onPlayerUse(PlayerInteractEvent event) {
+        ItemStack iteminhand = event.getPlayer().getItemInHand();
         for (String cratename : config.getConfigurationSection("crates").getKeys(false)) {
-            if (event.getPlayer().getItemInHand().getTypeId() == config.getInt("crates." + cratename + ".item-id")) {
-                if (event.getPlayer().getItemInHand().getDurability() == config.getInt("crates." + cratename + ".item-data")) {
-                    if (config.getBoolean("crates." + cratename + ".enable-lore-name"))
+            if (iteminhand.getTypeId() == config.getInt("crates." + cratename + ".item-id")) {
+                if (iteminhand.getDurability() == config.getInt("crates." + cratename + ".item-data")) {
+                    boolean matches = true;
+                    
+                    if (!config.getString("crates." + cratename + ".display-name").equals("none")) {
+                        event.getPlayer().getServer().broadcastMessage("has displayname");
+                        if (!config.getString("crates." + cratename + ".display-name").contains("{rand}")){
+                            event.getPlayer().getServer().broadcastMessage("no rand in displayname");
+                            if (iteminhand.hasItemMeta() && iteminhand.getItemMeta().hasDisplayName() && iteminhand.getItemMeta().getDisplayName().equals(config.getString("crates." + cratename + ".display-name").replace("&", "§"))) { //.replace(".", "\\.").replace("+", "\\+").replace("*", "\\*") + "$")
+                                //nothing
+                                event.getPlayer().getServer().broadcastMessage("displayname matches");
+                            } else {
+                                matches = false;
+                            }
+                        }
+                        else
+                        {
+                            event.getPlayer().getServer().broadcastMessage("no displayname");
+                        }
+                    }
+                    
+                    if (!config.getString("crates." + cratename + ".item-lore").equals("none")){
+                        event.getPlayer().getServer().broadcastMessage("has lore");
+                        if (iteminhand.getItemMeta().hasLore() && iteminhand.getItemMeta().getLore().get(0).equals(config.getString("crates." + cratename + ".item-lore").replace("&", "§"))) {
+                            //nothing
+                            event.getPlayer().getServer().broadcastMessage("lore matches");
+                        } else {
+                            matches = false;
+                        }
+                    }
+                    else
+                    {
+                        event.getPlayer().getServer().broadcastMessage("no lore");
+                    }
+                    
+                    if (matches)
+                        GiveCrate(cratename, event.getPlayer(), event);
+                    else
+                        if (config.getBoolean("crates." + cratename + ".cancel-event")) {
+                            event.setCancelled(true);
+                        }
+                    
+                    /*if (config.getBoolean("crates." + cratename + ".enable-lore-name"))
                     {
                         if (event.getPlayer().getItemInHand().getItemMeta().hasLore() && event.getPlayer().getItemInHand().getItemMeta().getLore().get(0).equals(cratename)) {
                             GiveCrate(cratename, event.getPlayer(), event);
@@ -85,7 +131,7 @@ public class CrateListener implements Listener {
                         if (event.getPlayer().getItemInHand().getItemMeta().hasDisplayName() && event.getPlayer().getItemInHand().getItemMeta().getDisplayName().equals(config.getString("crates." + cratename + ".display-name").replace("&", "§"))) {
                             GiveCrate(cratename, event.getPlayer(), event);
                         }
-                    }
+                    }*/
                 }
             }
         }
@@ -93,6 +139,10 @@ public class CrateListener implements Listener {
 
     @SuppressWarnings({"deprecation"})
     public void GiveCrate(String cratename, Player p, PlayerInteractEvent event) {
+        if (config.getBoolean("crates." + cratename + ".cancel-event")) {
+            event.setCancelled(true);
+        }
+        
         if (config.getBoolean("global.require-crate-perms")) {
             if (!p.hasPermission("greencrate.use." + cratename)) {
                 p.sendMessage("§2[§aGreenCrate§2]§r You do not have permission to open this!");
@@ -100,8 +150,22 @@ public class CrateListener implements Listener {
             }
         }
         
-        if (config.getBoolean("crates." + cratename + ".cancel-event")) {
-            event.setCancelled(true);
+        if (config.getBoolean("crates." + cratename + ".bind-to-player")) {
+            boolean canuse = true;
+            for (String lorenode : event.getPlayer().getItemInHand().getItemMeta().getLore())
+                if (lorenode.contains("§r§8Only for ") && !lorenode.equals("§r§8Only for " + event.getPlayer().getName()))
+                    canuse = false;
+            if (!canuse) {
+                p.sendMessage("§2[§aGreenCrate§2]§r This crate is locked!");
+                return;
+            }
+        }
+        
+        if (config.getBoolean("crates." + cratename + ".cooldown-enabled")) {
+            if (!Cooldowns.tryCooldown(p.getName(), cratename, config.getInt("crates." + cratename + ".cooldown-period"))) {
+                p.sendMessage(config.getString("crates." + cratename + ".cooldown-message").replace("&", "§"));
+                return;
+            }
         }
 
         if (config.getBoolean("crates." + cratename + ".confiscate")) {
@@ -122,6 +186,8 @@ public class CrateListener implements Listener {
                 inv.setItem(i, (ItemStack) items.toArray()[i]);
             }
 
+            opencrates.add(new OpenCrateInstance(p.getName(), cratename, inv));
+            
             p.openInventory(inv);
         } else {
             for (ItemStack i : items) {
@@ -187,7 +253,7 @@ public class CrateListener implements Listener {
         return ret;
     }
 
-    public ItemStack GetCrateItemStack(String cratename) {
+    public ItemStack GetCrateItemStackOld(String cratename) {
         ItemStack crate = new ItemStack(config.getInt("crates." + cratename + ".item-id"), 1, (short) config.getInt("crates." + cratename + ".item-data"));
         ItemMeta cratemeta = crate.getItemMeta();
 
@@ -206,5 +272,44 @@ public class CrateListener implements Listener {
         crate.setItemMeta(cratemeta);
 
         return crate;
+    }
+    
+    @EventHandler(priority = EventPriority.LOW)
+    public void onInventoryClick(InventoryClickEvent event) {
+        for (OpenCrateInstance oci : opencrates) {
+            if (oci.InvHandle.getName().equals(event.getInventory().getName()) && oci.PlayerName.equals(event.getWhoClicked().getName())) {
+                if (config.getBoolean("crates." + oci.CrateName + ".gui.persistent-items")) {
+                    if (event.getRawSlot() < (config.getInt("crates." + oci.CrateName + ".gui.chest-rows")*9)) {
+                        ItemStack stack = null;
+                        if (event.getCurrentItem() != null)
+                            stack = event.getCurrentItem();
+                        else if (event.getCursor() != null)
+                            stack = event.getCursor();
+                        
+                        if (stack != null) {
+                            event.setCurrentItem(stack);
+                            event.setCursor(stack);
+
+                            event.setCancelled(true);
+
+                            Player p = (Player)event.getWhoClicked();
+
+                            p.updateInventory();
+                        }
+                    }
+                }
+            }
+        }
+    }
+    
+    @EventHandler(priority = EventPriority.HIGH)
+    public void onInventoryClose(InventoryCloseEvent event) {
+        for (OpenCrateInstance oci : opencrates) {
+            if (oci.InvHandle.getName().equals(event.getInventory().getName()) && oci.PlayerName.equals(event.getPlayer().getName())) {
+                Player p = (Player)event.getPlayer();
+                opencrates.remove(oci);
+                break;
+            }
+        }
     }
 }
