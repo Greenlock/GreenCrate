@@ -34,7 +34,7 @@ public class CrateListener implements Listener {
 
     public FileConfiguration config = null;
     public Random rand = new Random();
-    public List<OpenCrateInstance> opencrates = new ArrayList<>();
+    public List<OpenCrateInstance> opencrates = new ArrayList();
 
     public CrateListener(FileConfiguration conf, Server s) {
         config = conf;
@@ -83,42 +83,28 @@ public class CrateListener implements Listener {
                     boolean matches = true;
                     
                     if (!config.getString("crates." + cratename + ".display-name").equals("none")) {
-                        event.getPlayer().getServer().broadcastMessage("has displayname");
                         if (!config.getString("crates." + cratename + ".display-name").contains("{rand}")){
-                            event.getPlayer().getServer().broadcastMessage("no rand in displayname");
                             if (iteminhand.hasItemMeta() && iteminhand.getItemMeta().hasDisplayName() && iteminhand.getItemMeta().getDisplayName().equals(config.getString("crates." + cratename + ".display-name").replace("&", "§"))) { //.replace(".", "\\.").replace("+", "\\+").replace("*", "\\*") + "$")
                                 //nothing
-                                event.getPlayer().getServer().broadcastMessage("displayname matches");
                             } else {
                                 matches = false;
                             }
                         }
-                        else
-                        {
-                            event.getPlayer().getServer().broadcastMessage("no displayname");
-                        }
                     }
                     
                     if (!config.getString("crates." + cratename + ".item-lore").equals("none")){
-                        event.getPlayer().getServer().broadcastMessage("has lore");
                         if (iteminhand.getItemMeta().hasLore() && iteminhand.getItemMeta().getLore().get(0).equals(config.getString("crates." + cratename + ".item-lore").replace("&", "§"))) {
                             //nothing
-                            event.getPlayer().getServer().broadcastMessage("lore matches");
                         } else {
                             matches = false;
                         }
-                    }
-                    else
-                    {
-                        event.getPlayer().getServer().broadcastMessage("no lore");
                     }
                     
                     if (matches)
                         GiveCrate(cratename, event.getPlayer(), event);
                     else
-                        if (config.getBoolean("crates." + cratename + ".cancel-event")) {
+                        if (config.getBoolean("crates." + cratename + ".cancel-event"))
                             event.setCancelled(true);
-                        }
                     
                     /*if (config.getBoolean("crates." + cratename + ".enable-lore-name"))
                     {
@@ -143,13 +129,6 @@ public class CrateListener implements Listener {
             event.setCancelled(true);
         }
         
-        if (config.getBoolean("global.require-crate-perms")) {
-            if (!p.hasPermission("greencrate.use." + cratename)) {
-                p.sendMessage("§2[§aGreenCrate§2]§r You do not have permission to open this!");
-                return;
-            }
-        }
-        
         if (config.getBoolean("crates." + cratename + ".bind-to-player")) {
             boolean canuse = true;
             for (String lorenode : event.getPlayer().getItemInHand().getItemMeta().getLore())
@@ -157,6 +136,13 @@ public class CrateListener implements Listener {
                     canuse = false;
             if (!canuse) {
                 p.sendMessage("§2[§aGreenCrate§2]§r This crate is locked!");
+                return;
+            }
+        }
+        
+        if (config.getBoolean("global.require-crate-perms")) {
+            if (!p.hasPermission("greencrate.use." + cratename)) {
+                p.sendMessage("§2[§aGreenCrate§2]§r You do not have permission to open this!");
                 return;
             }
         }
@@ -170,7 +156,7 @@ public class CrateListener implements Listener {
 
         if (config.getBoolean("crates." + cratename + ".confiscate")) {
             if (p.getItemInHand().getAmount() == 1) {
-                p.getInventory().removeItem(p.getItemInHand());
+                p.getInventory().removeItem(new ItemStack[] { p.getItemInHand() });
             } else {
                 p.getItemInHand().setAmount(p.getItemInHand().getAmount() - 1);
             }
@@ -191,7 +177,7 @@ public class CrateListener implements Listener {
             p.openInventory(inv);
         } else {
             for (ItemStack i : items) {
-                p.getInventory().addItem(i);
+                p.getInventory().addItem(new ItemStack[] { i });
             }
 
             p.updateInventory();
