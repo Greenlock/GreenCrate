@@ -209,7 +209,10 @@ public class CrateListener implements Listener {
 
     public List<ItemStack> GetCrateItems(String cratename) {
         List<ItemStack> ret = new ArrayList();
-
+        
+        if (config.getString("crates." + cratename + ".item-id") == null)
+            return null;
+        
         for (String itemkey : config.getConfigurationSection("crates." + cratename + ".contents").getKeys(false)) {
             ItemStack item = new ItemStack(Material.POISONOUS_POTATO, 1);
             for (String itemvalue : config.getConfigurationSection("crates." + cratename + ".contents." + itemkey).getKeys(false)) {

@@ -244,6 +244,11 @@ public class GreenCrate extends JavaPlugin {
         }
 
         List<ItemStack> items = listen.GetCrateItems(args[1]);
+        
+        if (items == null) {
+            sender.sendMessage("§2[§aGreenCrate§2]§r Specified crate does not exist.");
+            return;
+        }
 
         if (getConfig().getBoolean("crates." + args[1] + ".gui.enabled")) {
             Inventory inv = sender.getServer().createInventory(null, getConfig().getInt("crates." + args[1] + ".gui.chest-rows") * 9, getConfig().getString("crates." + args[1] + ".gui.label"));
@@ -274,6 +279,11 @@ public class GreenCrate extends JavaPlugin {
 
         List<ItemStack> items = listen.GetCrateItems(args[2]);
 
+        if (items == null) {
+            sender.sendMessage("§2[§aGreenCrate§2]§r Specified crate does not exist.");
+            return;
+        }
+        
         Player target = getServer().getPlayer(args[1]);
         
         if (target == null) {
@@ -310,6 +320,11 @@ public class GreenCrate extends JavaPlugin {
 
         List<ItemStack> items = listen.GetCrateItems(cratename);
 
+        if (items == null) {
+            sender.sendMessage("§2[§aGreenCrate§2]§r Specified crate does not exist.");
+            return;
+        }
+        
         if (getConfig().getBoolean("crates." + cratename + ".gui.enabled")) {
             Inventory inv = sender.getServer().createInventory(null, getConfig().getInt("crates." + cratename + ".gui.chest-rows") * 9, getConfig().getString("crates." + cratename + ".gui.label"));
 
@@ -344,6 +359,11 @@ public class GreenCrate extends JavaPlugin {
 
         List<ItemStack> items = listen.GetCrateItems(cratename);
 
+        if (items == null) {
+            sender.sendMessage("§2[§aGreenCrate§2]§r Specified crate does not exist.");
+            return;
+        }
+        
         Player target = getServer().getPlayer(args[1]);
         
         if (target == null) {
@@ -461,6 +481,9 @@ public class GreenCrate extends JavaPlugin {
 
         List<ItemStack> items = listen.GetCrateItems(args[2]);
 
+        if (items == null)
+            return;
+        
         Player target = getServer().getPlayer(args[1]);
         
         if (target == null) {
@@ -496,6 +519,9 @@ public class GreenCrate extends JavaPlugin {
 
         List<ItemStack> items = listen.GetCrateItems(cratename);
 
+        if (items == null)
+            return;
+        
         Player target = getServer().getPlayer(args[1]);
         
         if (target == null) {
