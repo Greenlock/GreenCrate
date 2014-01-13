@@ -2,19 +2,21 @@
 |#####  Version 0.0.8 (Alpha)  #####|
 |###################################|
 
+~~ Thanks to Benjibobs for helping with this release! ~~
+
 === Versions ===
 CB-1.5.2-R1.0, 1.6.2, 1.6.4
 
+=== Added ===
+* Player online checking for commands
+* '{rand}' notation in 'display-name' to replace 'enable-crate-number'
+
 === Changed ===
 * Mob drops to only drop when the mob is killed by a player
+* 'enable-lore-name' to 'item-lore'
 
 === Fixed ===
 * PlayerInteractEvent cancellation bug
-
-=== Known Caveats ===
-* [OLD] Crate-opening logic for crates with 'enable-lore-name' set to false does not work when
-  'enable-crate-number' is set to true for that crate.  Crates with 'enable-crate-number'
-  set to true and 'enable-lore-name' set to false will not open.
 
 
 

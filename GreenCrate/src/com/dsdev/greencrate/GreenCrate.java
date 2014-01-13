@@ -543,7 +543,7 @@ public class GreenCrate extends JavaPlugin {
         ArrayList<String> lore = new ArrayList();
         if (config.getBoolean("crates." + cratename + ".enable-lore-name"))
                 lore.add(cratename.replace("_", " "));
-        if (!(config.getString("crates." + cratename + ".item-lore") == "none"))
+        if (!(config.getString("crates." + cratename + ".item-lore").equals("none")))
                 lore.add(config.getString("crates." + cratename + ".item-lore"));
         if (config.getBoolean("crates." + cratename + ".bind-to-player"))
                 lore.add("§r§8Only for " + playername);

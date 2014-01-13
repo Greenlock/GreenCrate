@@ -17,6 +17,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
+import org.bukkit.event.block.Action;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDeathEvent;
 import org.bukkit.event.inventory.InventoryClickEvent;
@@ -80,6 +81,7 @@ public class CrateListener implements Listener {
         for (String cratename : config.getConfigurationSection("crates").getKeys(false)) {
             if (iteminhand.getTypeId() == config.getInt("crates." + cratename + ".item-id")) {
                 if (iteminhand.getDurability() == config.getInt("crates." + cratename + ".item-data")) {
+                    
                     boolean matches = true;
                     
                     if (!config.getString("crates." + cratename + ".display-name").equals("none")) {
@@ -89,11 +91,17 @@ public class CrateListener implements Listener {
                             } else {
                                 matches = false;
                             }
+                        } else {
+                            if (iteminhand.hasItemMeta() && iteminhand.getItemMeta().hasDisplayName() && iteminhand.getItemMeta().getDisplayName().indexOf(config.getString("crates." + cratename + ".display-name").replace("&", "§").split("\\{rand\\}")[0]) == 0) {
+                                //nothing
+                            } else {
+                                matches = false;
+                            }
                         }
                     }
                     
                     if (!config.getString("crates." + cratename + ".item-lore").equals("none")){
-                        if (iteminhand.getItemMeta().hasLore() && iteminhand.getItemMeta().getLore().get(0).equals(config.getString("crates." + cratename + ".item-lore").replace("&", "§"))) {
+                        if (iteminhand.hasItemMeta() && iteminhand.getItemMeta().hasLore() && iteminhand.getItemMeta().getLore().get(0).equals(config.getString("crates." + cratename + ".item-lore").replace("&", "§"))) {
                             //nothing
                         } else {
                             matches = false;
@@ -125,6 +133,8 @@ public class CrateListener implements Listener {
 
     @SuppressWarnings({"deprecation"})
     public void GiveCrate(String cratename, Player p, PlayerInteractEvent event) {
+        p.getServer().broadcastMessage(cratename);
+        
         if (config.getBoolean("crates." + cratename + ".cancel-event")) {
             event.setCancelled(true);
         }
@@ -154,6 +164,8 @@ public class CrateListener implements Listener {
             }
         }
 
+        ItemStack iinhand = p.getItemInHand();
+        
         if (config.getBoolean("crates." + cratename + ".confiscate")) {
             if (p.getItemInHand().getAmount() == 1) {
                 p.getInventory().removeItem(new ItemStack[] { p.getItemInHand() });
@@ -184,8 +196,12 @@ public class CrateListener implements Listener {
         }
 
         if (config.getBoolean("crates." + cratename + ".notify-used")) {
+            String dname = iinhand.getType().toString().toLowerCase();
+            if (iinhand.hasItemMeta() && iinhand.getItemMeta().hasDisplayName()) {
+                dname = iinhand.getItemMeta().getDisplayName();
+            }
             p.sendMessage(config.getString("crates." + cratename + ".notify-msg")
-                    .replace("<displayname>", config.getString("crates." + cratename + ".display-name") + "&r")
+                    .replace("<displayname>", dname + "&r")
                     .replace("<cratename>", cratename)
                     .replace("&", "§"));
         }
