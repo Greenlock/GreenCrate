@@ -1,4 +1,16 @@
 |###################################|
+|#####  Version 0.0.9 (Alpha)  #####|
+|###################################|
+
+=== Versions ===
+CB-1.5.2-R1.0, 1.6.2, 1.6.4
+
+=== Fixed ===
+* Some unintentional debug code that causes crate names to be broadcast on crate use.
+
+
+
+|###################################|
 |#####  Version 0.0.8 (Alpha)  #####|
 |###################################|
 
