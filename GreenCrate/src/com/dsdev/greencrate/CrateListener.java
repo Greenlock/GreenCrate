@@ -133,7 +133,6 @@ public class CrateListener implements Listener {
 
     @SuppressWarnings({"deprecation"})
     public void GiveCrate(String cratename, Player p, PlayerInteractEvent event) {
-        p.getServer().broadcastMessage(cratename);
         
         if (config.getBoolean("crates." + cratename + ".cancel-event")) {
             event.setCancelled(true);
